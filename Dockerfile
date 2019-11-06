@@ -1,71 +1,77 @@
-##########################
-# Building image
-##########################
-FROM        debian:buster-slim                                                                            AS builder
+#######################
+# Extra builder for healthchecker
+#######################
+FROM          --platform=$BUILDPLATFORM dubodubonduponey/base:builder                                                   AS builder-healthcheck
+
+ARG           HEALTH_VER=51ebf8ca3d255e0c846307bf72740f731e6210c3
+
+WORKDIR       $GOPATH/src/github.com/dubo-dubon-duponey/healthcheckers
+RUN           git clone git://github.com/dubo-dubon-duponey/healthcheckers .
+RUN           git checkout $HEALTH_VER
+RUN           arch="${TARGETPLATFORM#*/}"; \
+              env GOOS=linux GOARCH="${arch%/*}" go build -v -ldflags "-s -w" -o /dist/bin/http-health ./cmd/http
+
+RUN           chmod 555 /dist/bin/*
+
+#######################
+# Running image
+#######################
+FROM        debian:buster-slim
 
 LABEL       dockerfile.copyright="Dubo Dubon Duponey <dubo-dubon-duponey@jsboot.space>"
 
-# Install dependencies and tools
 ARG         DEBIAN_FRONTEND="noninteractive"
 ENV         TERM="xterm" LANG="C.UTF-8" LC_ALL="C.UTF-8"
-RUN         apt-get update              > /dev/null && \
-            apt-get dist-upgrade -y                 && \
-            apt-get install -y tzdata curl xmlstarlet uuid-runtime                                        > /dev/null
+# XXX tzdata
+RUN         apt-get update -qq && \
+            apt-get install -qq --no-install-recommends \
+              ca-certificates=20190110 \
+              curl=7.64.0-4 \
+              xmlstarlet=1.6.1-2 \
+              uuid-runtime=2.33.1-0.1   && \
+            apt-get -qq autoremove      && \
+            apt-get -qq clean           && \
+            rm -rf /var/lib/apt/lists/* && \
+            rm -rf /tmp/*               && \
+            rm -rf /var/tmp/*
 
-WORKDIR     /build
+WORKDIR     /dubo-dubon-duponey
 
-ARG         VERSION=1.16.2.1321-ad17d5f9e
-# v1.22.1.0 = b18125de1e53927af65e249d12c4cd71849c4122
-ARG         S6_OVERLAY_VERSION=v1.22.1.0
+# plex
+ARG         PLEX_VERSION=1.16.5.1554-1e5ff713d
+
 ARG         TARGETPLATFORM
 
-RUN \
-# Update and get dependencies
-    apt-get update && \
-# Cleanup
-    apt-get -y autoremove && \
-    apt-get -y clean && \
-    rm -rf /var/lib/apt/lists/* && \
-    rm -rf /tmp/* && \
-    rm -rf /var/tmp/*
+COPY        "./cache/$PLEX_VERSION/$TARGETPLATFORM/plex.deb" /tmp
+RUN         dpkg -i --force-confold /tmp/plex.deb
 
-RUN suffix=amd64 && { [ "$TARGETPLATFORM" != "arm64" ] || suffix=aarch64 } && { [ "$TARGETPLATFORM" != "arm/v7" ] || suffix=armhf } && \
-    curl -J -L -o /tmp/s6-overlay-amd64.tar.gz https://github.com/just-containers/s6-overlay/releases/download/${S6_OVERLAY_VERSION}/s6-overlay-${suffix}.tar.gz && \
-    tar xzf /tmp/s6-overlay-${suffix}.tar.gz -C / && \
+# Change home directory for plex
+RUN         usermod -d /config plex
 
-# Add user
-    useradd -U -d /config -s /bin/false plex && \
-    usermod -G users plex && \
+COPY        entrypoint.sh .
 
-# Setup directories
-    mkdir -p \
-      /config \
-      /transcode \
-      /data \
+# Environment
+ENV DBDB_LOGIN=""
+ENV DBDB_PASSWORD=""
+ENV DBDB_MAIL=""
+ENV DBDB_ADVERTISE_IP=""
+ENV DBDB_SERVER_NAME=""
+ENV DBDB_UID=""
+ENV DBDB_GID=""
 
+# Ports
+EXPOSE      32400/tcp
+# Unexposed, because we don't need them
+# 3005/tcp 8324/tcp 32469/tcp 1900/udp 32410/udp 32412/udp 32413/udp 32414/udp
 
-ENV CHANGE_CONFIG_DIR_OWNERSHIP="true"
-ENV HOME="/config"
-
-COPY root/ /
-
-# Get the deb for that platform and install it
-COPY "./cache/$VERSION/$TARGETPLATFORM/plex.deb" /tmp
-RUN dpkg -i --force-confold /tmp/plex.deb
+# Volumes we need
+VOLUME      /config
+VOLUME      /transcode
+VOLUME      /data
+# VOLUME      /certs
 
 # Declare healthcheck
 HEALTHCHECK --interval=5s --timeout=2s --retries=20 \
   CMD curl --connect-timeout 15 --silent --show-error --fail "http://localhost:32400/identity" >/dev/null || exit 1
 
-# Volumes we need
-VOLUME /config
-VOLUME /transcode
-VOLUME /data
-# VOLUME /certs
-
-# Ports
-EXPOSE 32400/tcp
-# Unexposed, because we don't need them
-# 3005/tcp 8324/tcp 32469/tcp 1900/udp 32410/udp 32412/udp 32413/udp 32414/udp
-
-ENTRYPOINT ["/init"]
+ENTRYPOINT  ["./entrypoint.sh"]

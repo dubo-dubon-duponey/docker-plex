@@ -21,10 +21,11 @@ geturl(){
 }
 
 for platform in linux/amd64 linux/arm64 linux/arm/v7; do
-  mkdir -p "$cacheroot/$platform"
-  if ! curl -fsSL -o "$cacheroot/$platform"/plex.deb "$(geturl "${platform}")"; then
-    rm -f "$cacheroot/$platform"/plex.deb
+  mkdir -p "${cacheroot}/$platform"
+  if ! curl -fsSL -o "${cacheroot}/$platform"/plex.deb "$(geturl "${platform}")"; then
+    rm -f "${cacheroot}/$platform"/plex.deb
     >&2 printf "Failed to download bits!\n"
     exit 1
   fi
+
 done
