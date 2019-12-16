@@ -20,7 +20,7 @@ For those who use docker-compose, this repository provides the necessary YML tem
 
 ### Host Networking
 
-```
+```bash
 docker run \
 -d \
 --name plex \
@@ -35,7 +35,7 @@ plexinc/pms-docker
 
 ### Macvlan Networking
 
-```
+```bash
 docker run \
 -d \
 --name plex \
@@ -58,7 +58,7 @@ Similar to `Host Networking` above with these changes:
 
 ### Bridge Networking
 
-```
+```bash
 docker run \
 -d \
 --name plex \
@@ -110,13 +110,13 @@ These parameters are usually not required but some special setups may benefit fr
 ## Users/Groups
 Permissions of mounted media outside the container do apply to the Plex Media Server running within the container.  As stated above, the Plex Media Server runs as a specially created `plex` user within the container.  This user may not exist outside the container and so the `PLEX_UID` and `PLEX_GID` parameters are used to set the user id and group id of this user within the container.  If you wish for the Plex Media Server to run under the same permissions as your own user, execute the following to find out these ids:
 
-```
-$ id `whoami`
+```bash
+id `whoami`
 ```
 
 You'll see a line like the following:
 
-```
+```bash
 uid=1001(myuser) gid=1001(myuser) groups=1001(myuser)
 ```
 
@@ -152,7 +152,7 @@ If you wish to migrate an existing directory to the docker config directory:
 ## Fedora, CentOS, Red Hat
 
 If you get the following output after you have started the container, then this is due to a patched version of Docker ([#158](https://github.com/just-containers/s6-overlay/issues/158#issuecomment-266913426))
-```
+```bash
 plex    | s6-supervise (child): fatal: unable to exec run: Permission denied
 plex    | s6-supervise avahi: warning: unable to spawn ./run - waiting 10 seconds
 ```
