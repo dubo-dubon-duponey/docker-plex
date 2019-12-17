@@ -12,14 +12,14 @@ fi
 
 function getPref {
   local key="$1"
-  
+
   xmlstarlet sel -T -t -m "/Preferences" -v "@${key}" -n "${prefFile}"
 }
 
 function setPref {
   local key="$1"
   local value="$2"
-  
+
   count="$(xmlstarlet sel -t -v "count(/Preferences/@${key})" "${prefFile}")"
   count=$(($count + 0))
   if [[ $count > 0 ]]; then
@@ -37,7 +37,7 @@ prefFile="${pmsApplicationSupportDir}/Plex Media Server/Preferences.xml"
 # Setup user/group ids
 if [ ! -z "${PLEX_UID}" ]; then
   if [ ! "$(id -u plex)" -eq "${PLEX_UID}" ]; then
-    
+
     # usermod likes to chown the home directory, so create a new one and use that
     # However, if the new UID is 0, we can't set the home dir back because the
     # UID of 0 is already in use (executing this script).
@@ -45,10 +45,10 @@ if [ ! -z "${PLEX_UID}" ]; then
       mkdir /tmp/temphome
       usermod -d /tmp/temphome plex
     fi
-    
+
     # Change the UID
     usermod -o -u "${PLEX_UID}" plex
-    
+
     # Cleanup the temp home dir
     if [ ! "${PLEX_UID}" -eq 0 ]; then
       usermod -d /config plex
@@ -100,6 +100,21 @@ fi
 
 # Get server token and only turn claim token into server token if we have former but not latter.
 token="$(getPref "PlexOnlineToken")"
+
+if [ -z "${token}" ] && [ "$PLEX_LOGIN" ] && [ "$PLEX_PASSWORD" ]; then
+  authtoken="$(curl -s -X POST \
+    --data-urlencode "login=$PLEX_LOGIN" \
+    --data-urlencode "password=$PLEX_PASSWORD" \
+    -H "Cookie: plex_tv_client_identifier=$serial" \
+    "https://plex.tv/api/v2/users/signin?X-Plex-Product=Plex%20Auth%20App&X-Plex-Version=3.24.0&X-Plex-Client-Identifier=${serial}&X-Plex-Platform=Chrome&X-Plex-Platform-Version=61.0&X-Plex-Device=OSX&X-Plex-Device-Name=Plex%20Web%20%28Chrome%29&X-Plex-Device-Screen-Resolution=1167x1057%2C1920x1200" \
+    | grep -oP '(?<=authToken=")[^"]+')"
+
+  PLEX_CLAIM=$(curl -s \
+    -H "X-Plex-Client-Identifier: $serial" \
+    -H "X-Plex-Token: $authtoken" \
+    https://plex.tv/api/claim/token.json | grep -oP "(?<=claim-)[^\"]+")
+fi
+
 if [ ! -z "${PLEX_CLAIM}" ] && [ -z "${token}" ]; then
   echo "Attempting to obtain server token from claim token"
   loginInfo="$(curl -X POST \
@@ -113,7 +128,7 @@ if [ ! -z "${PLEX_CLAIM}" ] && [ -z "${token}" ]; then
         -H 'X-Plex-Device: Linux' \
         "https://plex.tv/api/claim/exchange?token=${PLEX_CLAIM}")"
   token="$(echo "$loginInfo" | sed -n 's/.*<authentication-token>\(.*\)<\/authentication-token>.*/\1/p')"
-  
+
   if [ "$token" ]; then
     echo "Token obtained successfully"
     setPref "PlexOnlineToken" "${token}"
@@ -132,6 +147,44 @@ fi
 if [ -z "$(getPref "TranscoderTempDirectory")" ]; then
   setPref "TranscoderTempDirectory" "/transcode"
 fi
+
+touch /.firstRunComplete
+echo "Plex Media Server first run setup complete"
+
+if [ ! -z "${ADVERTISE_IP}" ]; then
+  setPref "customConnections" "${ADVERTISE_IP}"
+fi
+
+if [ ! -z "${ALLOWED_NETWORKS}" ]; then
+  setPref "allowedNetworks" "${ALLOWED_NETWORKS}"
+fi
+
+# Set transcoder temp if not yet set
+if [ -z "$(getPref "TranscoderTempDirectory")" ]; then
+  setPref "TranscoderTempDirectory" "/transcode"
+fi
+
+setPref "AcceptedEULA" "1"
+setPref "ManualPortMappingPort" "443"
+
+#  PlexOnlineUsername="%PLEX_USERNAME%"
+#  PlexOnlineMail="%PLEX_EMAIL%"
+#  FriendlyName="%PLEX_FRIENDLY_NAME%"
+#  PublishServerOnPlexOnlineKey="1"
+#	 GdmEnabled="0"
+#  DlnaEnabled="0"
+#  DlnaReportTimeline="0"
+#  sendCrashReports="0"
+#  FSEventLibraryPartialScanEnabled="1"
+#	FSEventLibraryUpdatesEnabled="1"
+#  ScannerLowPriority="1"
+#  ScheduledLibraryUpdateInterval="900"
+#	ScheduledLibraryUpdatesEnabled="1"
+#  LastAutomaticMappedPort="0"
+#  ManualPortMappingMode="1"
+#	 customCertificateDomain="%PLEX_DOMAIN%"
+#  customCertificateKey=""
+#	customCertificatePath="/certs/plex.pfx"/>
 
 touch /.firstRunComplete
 echo "Plex Media Server first run setup complete"
