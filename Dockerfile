@@ -20,37 +20,39 @@ RUN           arch="${TARGETPLATFORM#*/}"; \
 # hadolint ignore=DL3006
 FROM          $RUNTIME_BASE
 
-LABEL       dockerfile.copyright="Dubo Dubon Duponey <dubo-dubon-duponey@jsboot.space>"
+WORKDIR       /boot/bin
+ARG           PLEX_VERSION=1.18.3.2156-349e9837e
+# XXX verify why this is not set by the base image
+ARG           TARGETPLATFORM
 
-ARG         DEBIAN_FRONTEND="noninteractive"
-ENV         TERM="xterm" LANG="C.UTF-8" LC_ALL="C.UTF-8"
-# XXX tzdata
-RUN         apt-get update -qq && \
-            apt-get install -qq --no-install-recommends \
-              ca-certificates=20190110 \
-              curl=7.64.0-4 \
-              xmlstarlet=1.6.1-2 \
-              uuid-runtime=2.33.1-0.1   && \
-            apt-get -qq autoremove      && \
-            apt-get -qq clean           && \
-            rm -rf /var/lib/apt/lists/* && \
-            rm -rf /tmp/*               && \
-            rm -rf /var/tmp/*
+USER          root
 
-WORKDIR     /dubo-dubon-duponey
+ARG           DEBIAN_FRONTEND="noninteractive"
+ENV           TERM="xterm" LANG="C.UTF-8" LC_ALL="C.UTF-8"
 
-# plex
-ARG         PLEX_VERSION=1.16.5.1554-1e5ff713d
+# Custom package in
+COPY          "./cache/$PLEX_VERSION/$TARGETPLATFORM/plex.deb" /tmp
+RUN           dpkg -i --force-confold /tmp/plex.deb
 
-ARG         TARGETPLATFORM
+# All of this is required solely by the init script
+RUN           apt-get update -qq \
+              && apt-get install -qq --no-install-recommends \
+                curl=7.64.0-4 \
+                xmlstarlet=1.6.1-2 \
+                uuid-runtime=2.33.1-0.1   \
+                dnsutils=1:9.11.5.P4+dfsg-5.1 \
+              && apt-get -qq autoremove       \
+              && apt-get -qq clean            \
+              && rm -rf /var/lib/apt/lists/*  \
+              && rm -rf /tmp/*                \
+              && rm -rf /var/tmp/*
 
-COPY        "./cache/$PLEX_VERSION/$TARGETPLATFORM/plex.deb" /tmp
-RUN         dpkg -i --force-confold /tmp/plex.deb
+USER          dubo-dubon-duponey
 
 # Change home directory for plex
-RUN         usermod -d /config plex
+# RUN         usermod -d /config plex
 
-COPY        entrypoint.sh .
+# COPY        entrypoint.sh .
 
 # Environment
 ENV DBDB_LOGIN=""
@@ -67,7 +69,6 @@ EXPOSE      32400/tcp
 # 3005/tcp 8324/tcp 32469/tcp 1900/udp 32410/udp 32412/udp 32413/udp 32414/udp
 
 # Volumes we need
-VOLUME      /config
 VOLUME      /transcode
 VOLUME      /data
 # VOLUME      /certs
