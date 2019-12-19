@@ -85,12 +85,16 @@ plex::preferences::write(){
   dc::xml::set "$1" "$2" "Preferences" "$prefFile"
 }
 
+plex::start(){
+  >&2 printf "Starting Plex Media Server."
+  rm -f "${PLEX_MEDIA_SERVER_APPLICATION_SUPPORT_DIR}/Plex Media Server/plexmediaserver.pid"
+  export LD_LIBRARY_PATH=/usr/lib/plexmediaserver:/usr/lib/plexmediaserver/lib
+  exec /usr/lib/plexmediaserver/Plex\ Media\ Server "$@"
+}
 
 # If the first run completed successfully, start and go
 if [ -e /data/.firstRun ]; then
-  >&2 printf "Starting Plex Media Server."
-  export LD_LIBRARY_PATH=/usr/lib/plexmediaserver:/usr/lib/plexmediaserver/lib
-  exec /usr/lib/plexmediaserver/Plex\ Media\ Server "$@"
+  plex::start "$@"
   exit
 fi
 
@@ -165,6 +169,8 @@ plex::preferences::write "FriendlyName"             "$DBDB_SERVER_NAME"
 
 touch /data/.firstRun
 >&2 printf "Plex Media Server first run setup complete\n"
+
+plex::start "$@"
 
 #  PublishServerOnPlexOnlineKey="1"
 #  DlnaReportTimeline="0"
