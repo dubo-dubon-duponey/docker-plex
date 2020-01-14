@@ -21,7 +21,7 @@ RUN           arch="${TARGETPLATFORM#*/}"; \
 FROM          $RUNTIME_BASE
 
 WORKDIR       /boot/bin
-ARG           PLEX_VERSION=1.18.3.2156-349e9837e
+ARG           PLEX_VERSION=1.18.4.2171-ac2afe5f8
 # XXX verify why this is not set by the base image
 ARG           TARGETPLATFORM
 
