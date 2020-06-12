@@ -13,7 +13,7 @@ WORKDIR       $GOPATH/src/$GIT_REPO
 RUN           git clone git://$GIT_REPO .
 RUN           git checkout $GIT_VERSION
 RUN           arch="${TARGETPLATFORM#*/}"; \
-              env GOOS=linux GOARCH="${arch%/*}" go build -mod=vendor -v -ldflags "-s -w" -o /dist/boot/bin/http-health ./cmd/http
+              env GOOS=linux GOARCH="${arch%/*}" go build -v -ldflags "-s -w" -o /dist/boot/bin/http-health ./cmd/http
 
 #######################
 # Running image
@@ -29,7 +29,6 @@ ARG           TARGETPLATFORM
 USER          root
 
 ARG           DEBIAN_FRONTEND="noninteractive"
-ENV           TERM="xterm" LANG="C.UTF-8" LC_ALL="C.UTF-8"
 
 # Custom package in
 COPY          "./cache/$PLEX_VERSION/$TARGETPLATFORM/plex.deb" /tmp
