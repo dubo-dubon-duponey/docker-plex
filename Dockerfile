@@ -1,18 +1,21 @@
+ARG           BUILDER_BASE=dubodubonduponey/base:builder
+ARG           RUNTIME_BASE=dubodubonduponey/base:runtime
+
 #######################
 # Extra builder for healthchecker
 #######################
-ARG           BUILDER_BASE=dubodubonduponey/base:builder
-ARG           RUNTIME_BASE=dubodubonduponey/base:runtime
 # hadolint ignore=DL3006
 FROM          --platform=$BUILDPLATFORM $BUILDER_BASE                                                                   AS builder-healthcheck
 
-ARG           HEALTH_VER=51ebf8ca3d255e0c846307bf72740f731e6210c3
+ARG           GIT_REPO=github.com/dubo-dubon-duponey/healthcheckers
+ARG           GIT_VERSION=51ebf8ca3d255e0c846307bf72740f731e6210c3
 
-WORKDIR       $GOPATH/src/github.com/dubo-dubon-duponey/healthcheckers
-RUN           git clone git://github.com/dubo-dubon-duponey/healthcheckers .
-RUN           git checkout $HEALTH_VER
+WORKDIR       $GOPATH/src/$GIT_REPO
+RUN           git clone git://$GIT_REPO .
+RUN           git checkout $GIT_VERSION
 RUN           arch="${TARGETPLATFORM#*/}"; \
-              env GOOS=linux GOARCH="${arch%/*}" go build -v -ldflags "-s -w" -o /dist/boot/bin/http-health ./cmd/http
+              env GOOS=linux GOARCH="${arch%/*}" go build -v -ldflags "-s -w" \
+                -o /dist/boot/bin/http-health ./cmd/http
 
 #######################
 # Running image
@@ -21,14 +24,13 @@ RUN           arch="${TARGETPLATFORM#*/}"; \
 FROM          $RUNTIME_BASE
 
 WORKDIR       /boot/bin
-ARG           PLEX_VERSION=1.18.3.2156-349e9837e
+ARG           PLEX_VERSION=1.19.4.2935-79e214ead
 # XXX verify why this is not set by the base image
 ARG           TARGETPLATFORM
 
 USER          root
 
 ARG           DEBIAN_FRONTEND="noninteractive"
-ENV           TERM="xterm" LANG="C.UTF-8" LC_ALL="C.UTF-8"
 
 # Custom package in
 COPY          "./cache/$PLEX_VERSION/$TARGETPLATFORM/plex.deb" /tmp
@@ -37,10 +39,10 @@ RUN           dpkg -i --force-confold /tmp/plex.deb
 # All of this is required solely by the init script
 RUN           apt-get update -qq \
               && apt-get install -qq --no-install-recommends \
-                curl=7.64.0-4 \
+                curl=7.64.0-4+deb10u1 \
                 xmlstarlet=1.6.1-2 \
                 uuid-runtime=2.33.1-0.1   \
-                dnsutils=1:9.11.5.P4+dfsg-5.1 \
+                dnsutils=1:9.11.5.P4+dfsg-5.1+deb10u1 \
               && apt-get -qq autoremove       \
               && apt-get -qq clean            \
               && rm -rf /var/lib/apt/lists/*  \
@@ -59,9 +61,9 @@ ENV DBDB_LOGIN=""
 ENV DBDB_PASSWORD=""
 ENV DBDB_MAIL=""
 ENV DBDB_ADVERTISE_IP=""
+ENV DBDB_ADVERTISE_PORT=""
+ENV DBDB_ADVERTISE_DOMAIN=""
 ENV DBDB_SERVER_NAME=""
-ENV DBDB_UID=""
-ENV DBDB_GID=""
 
 # Ports
 EXPOSE      32400/tcp

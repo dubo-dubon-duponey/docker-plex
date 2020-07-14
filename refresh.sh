@@ -28,5 +28,4 @@ for platform in linux/amd64 linux/arm64 linux/arm/v7; do
     >&2 printf "Failed to download bits!\n"
     exit 1
   fi
-
 done

@@ -7,10 +7,12 @@ set -o errexit -o errtrace -o functrace -o nounset -o pipefail
 DBDB_LOGIN=${DBDB_LOGIN:-unknown}
 DBDB_PASSWORD=${DBDB_PASSWORD:-}
 DBDB_MAIL=${DBDB_MAIL:-unknown@unknown.com}
+DBDB_SERVER_NAME=${DBDB_SERVER_NAME:-Some name}
 # dig +short host-home.farcloser.world | grep -E "^[0-9.]+$"
 # dig A +short powacroquette.synology.me
 DBDB_ADVERTISE_IP=${DBDB_ADVERTISE_IP:-$(dig +short myip.opendns.com @resolver1.opendns.com)}
-DBDB_SERVER_NAME=${DBDB_SERVER_NAME:-Some name}
+DBDB_ADVERTISE_DOMAIN=${DBDB_ADVERTISE_DOMAIN:-}
+DBDB_ADVERTISE_PORT=${DBDB_ADVERTISE_PORT:-}
 
 # Server conf
 export PLEX_MEDIA_SERVER_APPLICATION_SUPPORT_DIR="/data/Library/Application Support"
@@ -163,11 +165,15 @@ plex::preferences::write "FriendlyName"             "$DBDB_SERVER_NAME"
 plex::preferences::write "PublishServerOnPlexOnlineKey" 1
 plex::preferences::write "PlexOnlineHome"           1
 plex::preferences::write "OldestPreviousVersion"    "legacy"
+[ ! "$DBDB_ADVERTISE_DOMAIN" ] || plex::preferences::write "customCertificateDomain"  "$DBDB_ADVERTISE_DOMAIN"
+[ ! "$DBDB_ADVERTISE_PORT" ] || plex::preferences::write "ManualPortMappingMode" "1"
+[ ! "$DBDB_ADVERTISE_PORT" ] || plex::preferences::write "ManualPortMappingPort" "$DBDB_ADVERTISE_PORT"
 
-[ ! "$DBDB_ADVERTISE_IP" ]  || plex::preferences::write "customConnections" "$DBDB_ADVERTISE_IP"
+[ ! "$DBDB_ADVERTISE_IP" ] || plex::preferences::write "customConnections" "$DBDB_ADVERTISE_IP"
 plex::preferences::write "GdmEnabled"               0
 plex::preferences::write "sendCrashReports"         0
 plex::preferences::write "TranscoderTempDirectory" "/transcode"
+
 
 
 touch /data/.firstRun
@@ -194,6 +200,5 @@ plex::start "$@"
 #  ScannerLowPriority="1"
 #  ScheduledLibraryUpdateInterval="900"
 #	ScheduledLibraryUpdatesEnabled="1"
-#	 customCertificateDomain="%PLEX_DOMAIN%"
 #  customCertificateKey=""
 #	customCertificatePath="/certs/plex.pfx"/>
