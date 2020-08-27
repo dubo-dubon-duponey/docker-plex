@@ -1,7 +1,3 @@
-variable "REGISTRY" {
-  default = "docker.io"
-}
-
 target "default" {
   inherits = ["shared"]
   args = {
@@ -9,7 +5,7 @@ target "default" {
     BUILD_DESCRIPTION = "A dubo image for Plex"
   }
   tags = [
-    "${REGISTRY}/dubodubonduponey/plex",
+    "dubodubonduponey/plex",
   ]
   # No v6 with Plex
   platforms = [

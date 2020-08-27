@@ -13,8 +13,8 @@ ARG           GIT_VERSION=51ebf8ca3d255e0c846307bf72740f731e6210c3
 WORKDIR       $GOPATH/src/$GIT_REPO
 RUN           git clone git://$GIT_REPO .
 RUN           git checkout $GIT_VERSION
-RUN           arch="${TARGETPLATFORM#*/}"; \
-              env GOOS=linux GOARCH="${arch%/*}" go build -v -ldflags "-s -w" \
+# hadolint ignore=DL4006
+RUN           env GOOS=linux GOARCH="$(printf "%s" "$TARGETPLATFORM" | sed -E 's/^[^/]+\/([^/]+).*/\1/')" go build -v -ldflags "-s -w" \
                 -o /dist/boot/bin/http-health ./cmd/http
 
 #######################
@@ -24,13 +24,11 @@ RUN           arch="${TARGETPLATFORM#*/}"; \
 FROM          $RUNTIME_BASE
 
 WORKDIR       /boot/bin
-ARG           PLEX_VERSION=1.19.4.2935-79e214ead
+ARG           PLEX_VERSION=1.20.1.3252-a78fef9a9
 # XXX verify why this is not set by the base image
 ARG           TARGETPLATFORM
 
 USER          root
-
-ARG           DEBIAN_FRONTEND="noninteractive"
 
 # Custom package in
 COPY          "./cache/$PLEX_VERSION/$TARGETPLATFORM/plex.deb" /tmp
