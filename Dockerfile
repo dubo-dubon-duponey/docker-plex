@@ -40,7 +40,7 @@ RUN           apt-get update -qq \
                 curl=7.64.0-4+deb10u1 \
                 xmlstarlet=1.6.1-2 \
                 uuid-runtime=2.33.1-0.1   \
-                dnsutils=1:9.11.5.P4+dfsg-5.1+deb10u1 \
+                dnsutils=1:9.11.5.P4+dfsg-5.1+deb10u2 \
               && apt-get -qq autoremove       \
               && apt-get -qq clean            \
               && rm -rf /var/lib/apt/lists/*  \
