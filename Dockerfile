@@ -24,7 +24,7 @@ RUN           env GOOS=linux GOARCH="$(printf "%s" "$TARGETPLATFORM" | sed -E 's
 FROM          $RUNTIME_BASE
 
 WORKDIR       /boot/bin
-ARG           PLEX_VERSION=1.20.1.3252-a78fef9a9
+ARG           PLEX_VERSION=1.20.5.3600-47c0d9038
 # XXX verify why this is not set by the base image
 ARG           TARGETPLATFORM
 
