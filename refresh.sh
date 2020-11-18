@@ -3,7 +3,7 @@ set -o errexit -o errtrace -o functrace -o nounset -o pipefail
 
 info="$(curl -fsSL https://plex.tv/pms/downloads/5.json)"
 version="$(printf "%s" "$info" | jq -rc .computer.Linux.version)"
-cacheroot=cache/"$version"
+cacheroot=context/cache/"$version"
 
 geturl(){
   local url

@@ -10,7 +10,7 @@ DBDB_MAIL=${DBDB_MAIL:-unknown@unknown.com}
 DBDB_SERVER_NAME=${DBDB_SERVER_NAME:-Some name}
 # dig +short host-home.farcloser.world | grep -E "^[0-9.]+$"
 # dig A +short powacroquette.synology.me
-DBDB_ADVERTISE_IP=${DBDB_ADVERTISE_IP:-$(dig +short myip.opendns.com @resolver1.opendns.com)}
+DBDB_ADVERTISE_IP=${DBDB_ADVERTISE_IP:-$(dig +short myip.opendns.com @resolver1.opendns.com || true)}
 DBDB_ADVERTISE_DOMAIN=${DBDB_ADVERTISE_DOMAIN:-}
 DBDB_ADVERTISE_PORT=${DBDB_ADVERTISE_PORT:-}
 

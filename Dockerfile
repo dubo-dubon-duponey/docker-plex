@@ -4,7 +4,7 @@ ARG           RUNTIME_BASE=dubodubonduponey/base:runtime
 #######################
 # Extra builder for healthchecker
 #######################
-# hadolint ignore=DL3006
+# hadolint ignore=DL3006,DL3029
 FROM          --platform=$BUILDPLATFORM $BUILDER_BASE                                                                   AS builder-healthcheck
 
 ARG           GIT_REPO=github.com/dubo-dubon-duponey/healthcheckers
@@ -13,8 +13,8 @@ ARG           GIT_VERSION=51ebf8ca3d255e0c846307bf72740f731e6210c3
 WORKDIR       $GOPATH/src/$GIT_REPO
 RUN           git clone git://$GIT_REPO .
 RUN           git checkout $GIT_VERSION
-RUN           arch="${TARGETPLATFORM#*/}"; \
-              env GOOS=linux GOARCH="${arch%/*}" go build -v -ldflags "-s -w" \
+# hadolint ignore=DL4006
+RUN           env GOOS=linux GOARCH="$(printf "%s" "$TARGETPLATFORM" | sed -E 's/^[^/]+\/([^/]+).*/\1/')" go build -v -ldflags "-s -w" \
                 -o /dist/boot/bin/http-health ./cmd/http
 
 #######################
@@ -24,13 +24,11 @@ RUN           arch="${TARGETPLATFORM#*/}"; \
 FROM          $RUNTIME_BASE
 
 WORKDIR       /boot/bin
-ARG           PLEX_VERSION=1.19.4.2935-79e214ead
+ARG           PLEX_VERSION=1.20.5.3600-47c0d9038
 # XXX verify why this is not set by the base image
 ARG           TARGETPLATFORM
 
 USER          root
-
-ARG           DEBIAN_FRONTEND="noninteractive"
 
 # Custom package in
 COPY          "./cache/$PLEX_VERSION/$TARGETPLATFORM/plex.deb" /tmp
@@ -42,7 +40,7 @@ RUN           apt-get update -qq \
                 curl=7.64.0-4+deb10u1 \
                 xmlstarlet=1.6.1-2 \
                 uuid-runtime=2.33.1-0.1   \
-                dnsutils=1:9.11.5.P4+dfsg-5.1+deb10u1 \
+                dnsutils=1:9.11.5.P4+dfsg-5.1+deb10u2 \
               && apt-get -qq autoremove       \
               && apt-get -qq clean            \
               && rm -rf /var/lib/apt/lists/*  \
