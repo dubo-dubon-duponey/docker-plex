@@ -61,7 +61,7 @@ plex::preferences::init(){
   local prefFile="${PLEX_MEDIA_SERVER_APPLICATION_SUPPORT_DIR}/Plex Media Server/Preferences.xml"
   [ -e "$prefFile" ] && return
 
-  >&2 printf "Creating pref shell\n"
+  printf >&2 "Creating pref shell\n"
 
   mkdir -p "$PLEX_MEDIA_SERVER_APPLICATION_SUPPORT_DIR/Plex Media Server"
   printf '<?xml version="1.0" encoding="utf-8"?>\n<Preferences/>\n' > "${prefFile}"
@@ -74,7 +74,7 @@ plex::preferences::init(){
 plex::preferences::read(){
   local prefFile="${PLEX_MEDIA_SERVER_APPLICATION_SUPPORT_DIR}/Plex Media Server/Preferences.xml"
 
-  >&2 printf "Reading pref %s\n" "$1"
+  printf >&2 "Reading pref %s\n" "$1"
 
   dc::xml::get "$1" "Preferences" "$prefFile"
 }
@@ -82,13 +82,13 @@ plex::preferences::read(){
 plex::preferences::write(){
   local prefFile="${PLEX_MEDIA_SERVER_APPLICATION_SUPPORT_DIR}/Plex Media Server/Preferences.xml"
 
-  >&2 printf "Writing pref %s=%s\n" "$1" "$2"
+  printf >&2 "Writing pref %s=%s\n" "$1" "$2"
 
   dc::xml::set "$1" "$2" "Preferences" "$prefFile"
 }
 
 plex::start(){
-  >&2 printf "Starting Plex Media Server."
+  printf >&2 "Starting Plex Media Server."
   rm -f "${PLEX_MEDIA_SERVER_APPLICATION_SUPPORT_DIR}/Plex Media Server/plexmediaserver.pid"
   export LD_LIBRARY_PATH=/usr/lib/plexmediaserver:/usr/lib/plexmediaserver/lib
   exec /usr/lib/plexmediaserver/Plex\ Media\ Server "$@"
@@ -137,7 +137,7 @@ fi
 # https://plex.tv/api/claim/subscribe?X-Plex-Product=Plex%20Web&X-Plex-Version=3.108.2&X-Plex-Client-Identifier=zgddlh84ron98pw0jw6stf1i&X-Plex-Platform=Chrome&X-Plex-Platform-Version=76.0&X-Plex-Sync-Version=2&X-Plex-Features=external-media&X-Plex-Model=bundled&X-Plex-Device=OSX&X-Plex-Device-Name=Chrome&X-Plex-Device-Screen-Resolution=1836x1299%2C3008x1692&X-Plex-Token=55vAuCc_1WyRumhj7xUu&X-Plex-Language=en
 
 #if [ "$PLEX_CLAIM" ] && [ ! "$token" ]; then
-#  >&2 printf "Attempting to obtain server token from claim token\n"
+#  printf >&2 "Attempting to obtain server token from claim token\n"
 #  loginInfo="$(curl -X POST \
 #        -H "X-Plex-Client-Identifier: $clientId" \
 #        -H 'X-Plex-Product: Plex Media Server'\
@@ -150,7 +150,7 @@ fi
 #        "https://plex.tv/api/claim/exchange?token=${PLEX_CLAIM}")"
 #  token="$(printf "%s" "$loginInfo" | sed -n 's/.*<authentication-token>\(.*\)<\/authentication-token>.*/\1/p')"
 #
-#  >&2 printf "Token obtained: %s\n" "$token"
+#  printf >&2 "Token obtained: %s\n" "$token"
 #fi
 
 [ ! "$PLEX_CLAIM" ]         || plex::preferences::write "PlexOnlineToken"   "$PLEX_CLAIM"
@@ -177,7 +177,7 @@ plex::preferences::write "TranscoderTempDirectory" "/transcode"
 
 
 touch /data/.firstRun
->&2 printf "Plex Media Server first run setup complete\n"
+printf >&2 "Plex Media Server first run setup complete\n"
 
 plex::start "$@"
 
