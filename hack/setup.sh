@@ -2,7 +2,7 @@
 set -o errexit -o errtrace -o functrace -o nounset -o pipefail
 
 export BIN_LOCATION="${BIN_LOCATION:-$HOME/Dubo/bin}"
-export BUILDKIT_HOST="${BUILDKIT_HOST:-tcp://buildkit-machina.local:4242}"
+export BUILDKIT_HOST="${BUILDKIT_HOST:-docker-container://dbdbdp-buildkit}"
 export SUITE=bullseye
 export DATE=2021-06-01
 
@@ -22,11 +22,11 @@ setup::tools(){
   fi
 
   mkdir -p "$location"
-  docker rm -f dubo-tools 2>/dev/null
-  docker run --name dubo-tools "$IMAGE_TOOLS" /boot/bin/cue >/dev/null 2>&1 || true
+  docker rm -f dubo-tools 2>/dev/null || true
+  docker run --pull always --name dubo-tools "$IMAGE_TOOLS" /boot/bin/cue >/dev/null 2>&1 || true
   docker cp dubo-tools:/boot/bin/cue "$location"
   docker cp dubo-tools:/boot/bin/buildctl "$location"
-  docker rm -f dubo-tools 2>/dev/null
+  docker rm -f dubo-tools 2>/dev/null || true
 }
 
 # XXX implement proper hado & shellcheck setup
@@ -42,13 +42,14 @@ command -v shellcheck >/dev/null || {
 
 setup::buildkit(){
   docker inspect dbdbdp-buildkit 1>/dev/null 2>&1 || \
-    docker run --rm -d \
+    docker run --pull always --rm -d \
       -p 4242:4242 \
       --network host \
       --name dbdbdp-buildkit \
       --env MDNS_ENABLED=true \
       --env MDNS_HOST=buildkit-machina \
       --env MDNS_NAME="Dubo Buildkit on la machina" \
+      --entrypoint buildkitd \
       --user root \
       --privileged \
       "$IMAGE_BLDKT"
@@ -56,4 +57,4 @@ setup::buildkit(){
 
 setup::tools "$BIN_LOCATION"
 
-[ "${BUILDKIT_HOST:-}" != "tcp://buildkit-machina.local:4242" ] || setup::buildkit
+[ "${BUILDKIT_HOST:-}" != "docker-container://dbdbdp-buildkit" ] || setup::buildkit
