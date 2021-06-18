@@ -41,14 +41,12 @@ defaults: {
 			tag: "latest"
 		}
 	],
+	// Other platforms are unsupported
 	platforms: [
 		types.#Platforms.#AMD64,
 		types.#Platforms.#ARM64,
-		types.#Platforms.#I386,
 		types.#Platforms.#V7,
-		types.#Platforms.#V6,
-		types.#Platforms.#S390X,
-		types.#Platforms.#PPC64LE,
+		types.#Platforms.#I386,
 	]
 
 	suite: "bullseye"

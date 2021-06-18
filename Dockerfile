@@ -19,7 +19,7 @@ RUN           git clone --recurse-submodules git://"$GIT_REPO" . && git checkout
 ARG           GOOS="$TARGETOS"
 ARG           GOARCH="$TARGETARCH"
 
-# hadolint ignore=DL4006
+# hadolint ignore=SC2046
 RUN           env GOARM="$(printf "%s" "$TARGETVARIANT" | tr -d v)" go build -trimpath $(if [ "$CGO_ENABLED" = 1 ]; then printf "%s" "-buildmode pie"; fi) \
                 -ldflags "$GO_LD_FLAGS" -tags "$GO_TAGS" -o /dist/boot/bin/"$GO_BUILD_OUTPUT" "$GO_BUILD_SOURCE"
 
@@ -35,6 +35,7 @@ ARG           TARGETPLATFORM
 
 USER          root
 
+RUN uname -a; echo $TARGETPLATFORM; exit 1
 # Custom package in
 COPY          "./cache/$PLEX_VERSION/$TARGETPLATFORM/plex.deb" /tmp
 RUN           dpkg -i --force-confold /tmp/plex.deb
@@ -50,10 +51,10 @@ RUN           --mount=type=secret,mode=0444,id=CA,dst=/etc/ssl/certs/ca-certific
               --mount=type=secret,id=APT_OPTIONS,dst=/etc/apt/apt.conf.d/dbdbdp.conf \
               apt-get update -qq && \
               apt-get install -qq --no-install-recommends \
-                curl=7.64.0-4+deb10u1 \
-                xmlstarlet=1.6.1-2 \
-                uuid-runtime=2.33.1-0.1   \
-                dnsutils=1:9.11.5.P4+dfsg-5.1+deb10u2 \
+                curl=7.74.0-1.2 \
+                xmlstarlet=1.6.1-2.1 \
+                uuid-runtime=2.36.1-7   \
+                dnsutils=1:9.16.15-1 \
               && apt-get -qq autoremove       \
               && apt-get -qq clean            \
               && rm -rf /var/lib/apt/lists/*  \
