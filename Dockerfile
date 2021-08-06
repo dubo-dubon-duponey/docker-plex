@@ -46,7 +46,6 @@ RUN           --mount=type=secret,uid=100,id=CA \
               --mount=type=secret,id=APT_SOURCES \
               --mount=type=secret,id=APT_CONFIG \
               apt-get update -qq && \
-              apt show uuid-runtime && \
               apt-get install -qq --no-install-recommends \
                 curl=7.74.0-1.3+b1 \
                 xmlstarlet=1.6.1-2.1 \
