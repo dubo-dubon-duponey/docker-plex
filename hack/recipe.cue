@@ -3,7 +3,6 @@ package cake
 import (
 	"duponey.cloud/scullery"
 	"duponey.cloud/buildkit/types"
-	"strings"
 )
 
 
@@ -17,14 +16,11 @@ cakes: {
 			}
 
 			process: {
-				platforms: types.#Platforms | * [
+				platforms: [
 					types.#Platforms.#AMD64,
 					types.#Platforms.#ARM64,
 					types.#Platforms.#I386,
 					types.#Platforms.#V7,
-					types.#Platforms.#V6,
-					types.#Platforms.#S390X,
-					types.#Platforms.#PPC64LE,
 				]
 			}
 
@@ -52,11 +48,6 @@ injectors: {
 
 cakes: image: recipe: {
 	input: from: registry: injectors.registry
-
-	if injectors.platforms != _|_ {
-		process: platforms: strings.Split(injectors.platforms, ",")
-	}
-
 
 	output: images: tags: [injectors.suite + "-" + injectors.date, injectors.suite + "-latest", "latest"]
 	metadata: ref_name: injectors.suite + "-" + injectors.date

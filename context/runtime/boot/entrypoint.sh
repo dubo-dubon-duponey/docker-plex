@@ -144,6 +144,7 @@ plex::preferences::write(){
 plex::start(){
   printf >&2 "Starting Plex Media Server."
   rm -f "${PLEX_MEDIA_SERVER_APPLICATION_SUPPORT_DIR}/Plex Media Server/plexmediaserver.pid"
+  # XXX LD_LIB is problematic with capabilities
   export LD_LIBRARY_PATH=/usr/lib/plexmediaserver:/usr/lib/plexmediaserver/lib
   exec /usr/lib/plexmediaserver/Plex\ Media\ Server "$@"
 }
