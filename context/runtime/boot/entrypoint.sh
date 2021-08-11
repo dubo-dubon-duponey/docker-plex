@@ -45,7 +45,7 @@ case "${1:-run}" in
   "run")
     # Bonjour the container if asked to. While the PORT is no guaranteed to be mapped on the host in bridge, this does not matter since mDNS will not work at all in bridge mode.
     if [ "${MDNS_ENABLED:-}" == true ]; then
-      goello-server -name "$MDNS_NAME" -host "$MDNS_HOST" -port "$PORT" -type "$MDNS_TYPE" &
+      goello-server -json "$(printf '[{"Type": "%s", "Name": "%s", "Host": "%s", "Port": %s, "Text": {}}]' "$MDNS_TYPE" "$MDNS_NAME" "$MDNS_HOST" "$PORT")" &
     fi
 
     # If we want TLS and authentication, start caddy in the background
@@ -226,7 +226,7 @@ plex::preferences::write "OldestPreviousVersion"    "legacy"
 [ ! "$DBDB_ADVERTISE_IP" ] || plex::preferences::write "customConnections" "$DBDB_ADVERTISE_IP"
 plex::preferences::write "GdmEnabled"               0
 plex::preferences::write "sendCrashReports"         0
-plex::preferences::write "TranscoderTempDirectory" "/transcode"
+plex::preferences::write "TranscoderTempDirectory" "/tmp/transcode"
 
 
 touch /data/.firstRun

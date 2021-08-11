@@ -1,21 +1,24 @@
 ARG           FROM_REGISTRY=ghcr.io/dubo-dubon-duponey
 
 ARG           FROM_IMAGE_BUILDER=base:builder-bullseye-2021-08-01@sha256:f492d8441ddd82cad64889d44fa67cdf3f058ca44ab896de436575045a59604c
+ARG           FROM_IMAGE_AUDITOR=base:auditor-bullseye-2021-08-01@sha256:0f9017945c84b48c5e9906f3325409ab446964a9e97c65a1e1820f2dd3ff1b2c
+ARG           FROM_IMAGE_TOOLS=tools:linux-bullseye-2021-08-01@sha256:cec37383d167e274e3140f2b5db8cb80d0fb406538372f0c23ba09d97ee0b2a3
 ARG           FROM_IMAGE_RUNTIME=base:runtime-bullseye-2021-08-01@sha256:edc80b2c8fd94647f793cbcb7125c87e8db2424f16b9fd0b8e173af850932b48
-ARG           FROM_IMAGE_TOOLS=tools:linux-bullseye-2021-08-01@sha256:87ec12fe94a58ccc95610ee826f79b6e57bcfd91aaeb4b716b0548ab7b2408a7
 
 FROM          $FROM_REGISTRY/$FROM_IMAGE_TOOLS                                                                          AS builder-tools
 
 #######################
-# Builder assembly, XXX should be auditor
+# Builder assembly
 #######################
-FROM          --platform=$BUILDPLATFORM $FROM_REGISTRY/$FROM_IMAGE_BUILDER                                              AS builder
+FROM          --platform=$BUILDPLATFORM $FROM_REGISTRY/$FROM_IMAGE_AUDITOR                                              AS builder
 
 RUN           mkdir -p /dist/boot/bin
 
 COPY          --from=builder-tools  /boot/bin/caddy          /dist/boot/bin
 COPY          --from=builder-tools  /boot/bin/goello-server  /dist/boot/bin
 COPY          --from=builder-tools  /boot/bin/http-health    /dist/boot/bin
+
+RUN           setcap 'cap_net_bind_service+ep' /dist/boot/bin/caddy
 
 RUN           chmod 555 /dist/boot/bin/*; \
               epoch="$(date --date "$BUILD_CREATED" +%s)"; \
@@ -70,7 +73,6 @@ ENV           DBDB_ADVERTISE_IP=""
 ENV           DBDB_ADVERTISE_PORT=""
 ENV           DBDB_ADVERTISE_DOMAIN=""
 ENV           DBDB_SERVER_NAME=""
-VOLUME      /transcode
 
 # Ports
 #EXPOSE      32400/tcp
