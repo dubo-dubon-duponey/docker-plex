@@ -10,7 +10,9 @@ FROM          $FROM_REGISTRY/$FROM_IMAGE_TOOLS                                  
 #######################
 # Builder assembly
 #######################
-FROM          --platform=$BUILDPLATFORM $FROM_REGISTRY/$FROM_IMAGE_AUDITOR                                              AS builder
+FROM          --platform=$BUILDPLATFORM $FROM_REGISTRY/$FROM_IMAGE_AUDITOR                                              AS assembly
+
+ARG           TARGETARCH
 
 RUN           mkdir -p /dist/boot/bin
 
@@ -26,13 +28,8 @@ RUN           RUNNING=true \
                 dubo-check validate /dist/boot/bin/caddy
 
 RUN           RUNNING=true \
-              RO_RELOCATIONS=true \
               STATIC=true \
-                dubo-check validate /dist/boot/bin/goello-server
-
-RUN           RUNNING=true \
-              RO_RELOCATIONS=true \
-              STATIC=true \
+                dubo-check validate /dist/boot/bin/goello-server; \
                 dubo-check validate /dist/boot/bin/http-health
 
 RUN           chmod 555 /dist/boot/bin/*; \
@@ -44,10 +41,12 @@ RUN           chmod 555 /dist/boot/bin/*; \
 #######################
 FROM          $FROM_REGISTRY/$FROM_IMAGE_RUNTIME
 
-WORKDIR       /boot/bin
-ARG           PLEX_VERSION=1.23.6.4881-e2e58f321
-
 ARG           TARGETPLATFORM
+
+# Env so that it's available at runtime
+ENV           PLEX_VERSION=1.23.6.4881-e2e58f321
+
+WORKDIR       /boot/bin
 
 USER          root
 
@@ -97,7 +96,7 @@ ENV           DBDB_SERVER_NAME=""
 
 ENV           NICK="plex"
 
-COPY          --from=builder --chown=$BUILD_UID:root /dist /
+COPY          --from=assembly --chown=$BUILD_UID:root /dist /
 
 ### Front server configuration
 # Port to use
