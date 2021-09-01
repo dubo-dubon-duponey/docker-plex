@@ -1,6 +1,60 @@
 #!/usr/bin/env bash
 set -o errexit -o errtrace -o functrace -o nounset -o pipefail
 
+[ -w /certs ] || {
+  printf >&2 "/certs is not writable. Check your mount permissions.\n"
+  exit 1
+}
+
+[ -w /tmp ] || {
+  printf >&2 "/tmp is not writable. Check your mount permissions.\n"
+  exit 1
+}
+
+[ -w /data ] || {
+  printf >&2 "/data is not writable. Check your mount permissions.\n"
+  exit 1
+}
+
+# Helpers
+case "${1:-run}" in
+  # Short hand helper to generate password hash
+  "hash")
+    shift
+    printf >&2 "Generating password hash\n"
+    caddy hash-password -algorithm bcrypt "$@"
+    exit
+  ;;
+  # Helper to get the ca.crt out (once initialized)
+  "cert")
+    if [ "${TLS:-}" == "" ]; then
+      printf >&2 "Your container is not configured for TLS termination - there is no local CA in that case."
+      exit 1
+    fi
+    if [ "${TLS:-}" != "internal" ]; then
+      printf >&2 "Your container uses letsencrypt - there is no local CA in that case."
+      exit 1
+    fi
+    if [ ! -e /certs/pki/authorities/local/root.crt ]; then
+      printf >&2 "No root certificate installed or generated. Run the container so that a cert is generated, or provide one at runtime."
+      exit 1
+    fi
+    cat /certs/pki/authorities/local/root.crt
+    exit
+  ;;
+  "run")
+    # Bonjour the container if asked to. While the PORT is no guaranteed to be mapped on the host in bridge, this does not matter since mDNS will not work at all in bridge mode.
+    if [ "${MDNS_ENABLED:-}" == true ]; then
+      goello-server -json "$(printf '[{"Type": "%s", "Name": "%s", "Host": "%s", "Port": %s, "Text": {}}]' "$MDNS_TYPE" "$MDNS_NAME" "$MDNS_HOST" "$PORT")" &
+    fi
+
+    # If we want TLS and authentication, start caddy in the background
+    if [ "${TLS:-}" ]; then
+      HOME=/tmp/caddy-home caddy run -config /config/caddy/main.conf --adapter caddyfile &
+    fi
+  ;;
+esac
+
 # XXX cleanup plex/plexmediaserver.pid if there on start
 
 # Environment
@@ -61,7 +115,7 @@ plex::preferences::init(){
   local prefFile="${PLEX_MEDIA_SERVER_APPLICATION_SUPPORT_DIR}/Plex Media Server/Preferences.xml"
   [ -e "$prefFile" ] && return
 
-  >&2 printf "Creating pref shell\n"
+  printf >&2 "Creating pref shell\n"
 
   mkdir -p "$PLEX_MEDIA_SERVER_APPLICATION_SUPPORT_DIR/Plex Media Server"
   printf '<?xml version="1.0" encoding="utf-8"?>\n<Preferences/>\n' > "${prefFile}"
@@ -74,7 +128,7 @@ plex::preferences::init(){
 plex::preferences::read(){
   local prefFile="${PLEX_MEDIA_SERVER_APPLICATION_SUPPORT_DIR}/Plex Media Server/Preferences.xml"
 
-  >&2 printf "Reading pref %s\n" "$1"
+  printf >&2 "Reading pref %s\n" "$1"
 
   dc::xml::get "$1" "Preferences" "$prefFile"
 }
@@ -82,14 +136,15 @@ plex::preferences::read(){
 plex::preferences::write(){
   local prefFile="${PLEX_MEDIA_SERVER_APPLICATION_SUPPORT_DIR}/Plex Media Server/Preferences.xml"
 
-  >&2 printf "Writing pref %s=%s\n" "$1" "$2"
+  printf >&2 "Writing pref %s=%s\n" "$1" "$2"
 
   dc::xml::set "$1" "$2" "Preferences" "$prefFile"
 }
 
 plex::start(){
-  >&2 printf "Starting Plex Media Server."
+  printf >&2 "Starting Plex Media Server."
   rm -f "${PLEX_MEDIA_SERVER_APPLICATION_SUPPORT_DIR}/Plex Media Server/plexmediaserver.pid"
+  # XXX LD_LIB is problematic with capabilities
   export LD_LIBRARY_PATH=/usr/lib/plexmediaserver:/usr/lib/plexmediaserver/lib
   exec /usr/lib/plexmediaserver/Plex\ Media\ Server "$@"
 }
@@ -137,7 +192,7 @@ fi
 # https://plex.tv/api/claim/subscribe?X-Plex-Product=Plex%20Web&X-Plex-Version=3.108.2&X-Plex-Client-Identifier=zgddlh84ron98pw0jw6stf1i&X-Plex-Platform=Chrome&X-Plex-Platform-Version=76.0&X-Plex-Sync-Version=2&X-Plex-Features=external-media&X-Plex-Model=bundled&X-Plex-Device=OSX&X-Plex-Device-Name=Chrome&X-Plex-Device-Screen-Resolution=1836x1299%2C3008x1692&X-Plex-Token=55vAuCc_1WyRumhj7xUu&X-Plex-Language=en
 
 #if [ "$PLEX_CLAIM" ] && [ ! "$token" ]; then
-#  >&2 printf "Attempting to obtain server token from claim token\n"
+#  printf >&2 "Attempting to obtain server token from claim token\n"
 #  loginInfo="$(curl -X POST \
 #        -H "X-Plex-Client-Identifier: $clientId" \
 #        -H 'X-Plex-Product: Plex Media Server'\
@@ -150,7 +205,7 @@ fi
 #        "https://plex.tv/api/claim/exchange?token=${PLEX_CLAIM}")"
 #  token="$(printf "%s" "$loginInfo" | sed -n 's/.*<authentication-token>\(.*\)<\/authentication-token>.*/\1/p')"
 #
-#  >&2 printf "Token obtained: %s\n" "$token"
+#  printf >&2 "Token obtained: %s\n" "$token"
 #fi
 
 [ ! "$PLEX_CLAIM" ]         || plex::preferences::write "PlexOnlineToken"   "$PLEX_CLAIM"
@@ -172,12 +227,34 @@ plex::preferences::write "OldestPreviousVersion"    "legacy"
 [ ! "$DBDB_ADVERTISE_IP" ] || plex::preferences::write "customConnections" "$DBDB_ADVERTISE_IP"
 plex::preferences::write "GdmEnabled"               0
 plex::preferences::write "sendCrashReports"         0
-plex::preferences::write "TranscoderTempDirectory" "/transcode"
-
+plex::preferences::write "TranscoderTempDirectory" "/tmp/transcode"
 
 
 touch /data/.firstRun
->&2 printf "Plex Media Server first run setup complete\n"
+printf >&2 "Plex Media Server first run setup complete\n"
+
+tail -F "$PLEX_MEDIA_SERVER_APPLICATION_SUPPORT_DIR/Plex Media Server/Logs/Plex Transcoder Statistics.log" &
+# Not super satisfying... but then tail -F *.log is not going to cut it
+for watch_this in \
+  com.plexapp.agents.plexthememusic.log \
+  com.plexapp.agents.imdb.log \
+  com.plexapp.agents.thetvdb.log \
+  com.plexapp.agents.fanarttv.log \
+  com.plexapp.system.log \
+  com.plexapp.agents.none.log \
+  tv.plex.agents.music.log \
+  com.plexapp.agents.lastfm.log \
+  tv.plex.agents.movie.log \
+  com.plexapp.agents.localmedia.log \
+  com.plexapp.agents.movieposterdb.log \
+  com.plexapp.agents.lyricfind.log \
+  com.plexapp.agents.htbackdrops.log \
+  tv.plex.agents.series.log \
+  com.plexapp.agents.opensubtitles.log \
+  com.plexapp.agents.themoviedb.log \
+  org.musicbrainz.agents.music.log; do
+  tail -F "$PLEX_MEDIA_SERVER_APPLICATION_SUPPORT_DIR/Plex Media Server/Logs/PMS Plugin Logs/$watch_this" &
+done
 
 plex::start "$@"
 
