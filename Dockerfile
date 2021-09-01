@@ -44,7 +44,7 @@ FROM          $FROM_REGISTRY/$FROM_IMAGE_RUNTIME
 ARG           TARGETPLATFORM
 
 # Env so that it's available at runtime
-ENV           PLEX_VERSION=1.23.6.4881-e2e58f321
+ENV           PLEX_VERSION=1.24.1.4931-1a38e63c6
 
 WORKDIR       /boot/bin
 
