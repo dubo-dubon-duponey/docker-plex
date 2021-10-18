@@ -29,7 +29,7 @@ RUN           RUNNING=true \
 
 RUN           RUNNING=true \
               STATIC=true \
-                dubo-check validate /dist/boot/bin/goello-server; \
+                dubo-check validate /dist/boot/bin/goello-server-ng; \
                 dubo-check validate /dist/boot/bin/http-health
 
 RUN           chmod 555 /dist/boot/bin/*; \
