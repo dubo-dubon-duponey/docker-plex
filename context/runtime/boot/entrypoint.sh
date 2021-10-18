@@ -5,6 +5,26 @@ root="$(cd "$(dirname "${BASH_SOURCE[0]:-$PWD}")" 2>/dev/null 1>&2 && pwd)"
 readonly root
 # shellcheck source=/dev/null
 source "$root/helpers.sh"
+# shellcheck source=/dev/null
+source "$root/mdns.sh"
+
+helpers::dir::writable "/certs"
+helpers::dir::writable "/data"
+helpers::dir::writable "/tmp"
+helpers::dir::writable "$XDG_RUNTIME_DIR" create
+helpers::dir::writable "$XDG_STATE_HOME" create
+helpers::dir::writable "$XDG_CACHE_HOME" create
+
+# mDNS blast if asked to
+[ ! "$MDNS_HOST" ] || {
+  _mdns_port="$([ "$TLS" != "" ] && printf "%s" "${PORT_HTTPS:-443}" || printf "%s" "${PORT_HTTP:-80}")"
+  [ ! "${MDNS_STATION:-}" ] || mdns::add "_workstation._tcp" "$MDNS_HOST" "${MDNS_NAME:-}" "$_mdns_port"
+  mdns::add "${MDNS_TYPE:-_http._tcp}" "$MDNS_HOST" "${MDNS_NAME:-}" "$_mdns_port"
+  mdns::start &
+}
+
+# Start the sidecar
+start::sidecar &
 
 # XXX cleanup plex/plexmediaserver.pid if there on start
 
@@ -68,7 +88,7 @@ plex::preferences::init(){
 
   printf >&2 "Creating pref shell\n"
 
-  mkdir -p "$PLEX_MEDIA_SERVER_APPLICATION_SUPPORT_DIR/Plex Media Server"
+  helpers::dir::writable "$PLEX_MEDIA_SERVER_APPLICATION_SUPPORT_DIR/Plex Media Server" create
   printf '<?xml version="1.0" encoding="utf-8"?>\n<Preferences/>\n' > "${prefFile}"
 #  cat > "${prefFile}" <<-EOF
 #<?xml version="1.0" encoding="utf-8"?>

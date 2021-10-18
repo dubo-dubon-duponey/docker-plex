@@ -1,9 +1,9 @@
 ARG           FROM_REGISTRY=ghcr.io/dubo-dubon-duponey
 
-ARG           FROM_IMAGE_BUILDER=base:builder-bullseye-2021-10-01@sha256:8500836fc43374bdb9831ac0d76d70054987aa210ac6c3f2caff0ddd8ac53b90
-ARG           FROM_IMAGE_AUDITOR=base:auditor-bullseye-2021-10-01@sha256:af728eaf5271cae6a948f5c4d34a43b4cff5dae16cc3e5dabf99a0aeea7986a9
-ARG           FROM_IMAGE_TOOLS=tools:linux-bullseye-2021-10-01@sha256:24da09d01cc3505dd886672c0993f6f99b4fff4d1de2fcfbbe81aa52c880b9ac
-ARG           FROM_IMAGE_RUNTIME=base:runtime-bullseye-2021-10-01@sha256:5c76496f4dc901e9a59370babd9fa3c59427064971058b373121140a29fb153f
+ARG           FROM_IMAGE_BUILDER=base:builder-bullseye-2021-10-15@sha256:33e021267790132e63be2cea08e77d64ec5d0434355734e94f8ff2d90c6f8944
+ARG           FROM_IMAGE_AUDITOR=base:auditor-bullseye-2021-10-15@sha256:eb822683575d68ccbdf62b092e1715c676b9650a695d8c0235db4ed5de3e8534
+ARG           FROM_IMAGE_TOOLS=tools:linux-bullseye-2021-10-15@sha256:e8ec2d1d185177605736ba594027f27334e68d7984bbfe708a0b37f4b6f2dbd7
+ARG           FROM_IMAGE_RUNTIME=base:runtime-bullseye-2021-10-15@sha256:7072702dab130c1bbff5e5c4a0adac9c9f2ef59614f24e7ee43d8730fae2764c
 
 FROM          $FROM_REGISTRY/$FROM_IMAGE_TOOLS                                                                          AS builder-tools
 
@@ -17,7 +17,7 @@ ARG           TARGETARCH
 RUN           mkdir -p /dist/boot/bin
 
 COPY          --from=builder-tools  /boot/bin/caddy           /dist/boot/bin
-COPY          --from=builder-tools  /boot/bin/goello-server   /dist/boot/bin
+COPY          --from=builder-tools  /boot/bin/goello-server-ng   /dist/boot/bin
 COPY          --from=builder-tools  /boot/bin/http-health     /dist/boot/bin
 
 RUN           setcap 'cap_net_bind_service+ep'                /dist/boot/bin/caddy
@@ -44,7 +44,7 @@ FROM          $FROM_REGISTRY/$FROM_IMAGE_RUNTIME
 ARG           TARGETPLATFORM
 
 # Env so that it's available at runtime
-ENV           PLEX_VERSION=1.24.3.5033-757abe6b4
+ENV           PLEX_VERSION=1.24.4.5081-e362dc1ee
 
 WORKDIR       /boot/bin
 
@@ -129,11 +129,11 @@ ENV           AUTH="My Precious Realm"
 ENV           AUTH_USERNAME="dubo-dubon-duponey"
 ENV           AUTH_PASSWORD="cmVwbGFjZV9tZV93aXRoX3NvbWV0aGluZwo="
 ### mDNS broadcasting
-# Type to advertise - set to empty string to disable mDNS altogether
-ENV           MDNS="_http._tcp"
+# Type to advertise
+ENV           MDNS_TYPE="_http._tcp"
 # Name is used as a short description for the service
 ENV           MDNS_NAME="$NICK mDNS display name"
-# The service will be annonced and reachable at $MDNS_HOST.local
+# The service will be annonced and reachable at $MDNS_HOST.local (set to empty string to disable mDNS announces entirely)
 ENV           MDNS_HOST="$NICK"
 # Also announce the service as a workstation (for example for the benefit of coreDNS mDNS)
 ENV           MDNS_STATION=true
