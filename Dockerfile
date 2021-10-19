@@ -23,14 +23,11 @@ COPY          --from=builder-tools  /boot/bin/http-health     /dist/boot/bin
 RUN           setcap 'cap_net_bind_service+ep'                /dist/boot/bin/caddy
 
 RUN           RUNNING=true \
-              RO_RELOCATIONS=true \
               STATIC=true \
-                dubo-check validate /dist/boot/bin/caddy
+                dubo-check validate /dist/boot/bin/*
 
-RUN           RUNNING=true \
-              STATIC=true \
-                dubo-check validate /dist/boot/bin/goello-server-ng; \
-                dubo-check validate /dist/boot/bin/http-health
+RUN           RO_RELOCATIONS=true \
+                dubo-check validate /dist/boot/bin/caddy
 
 RUN           chmod 555 /dist/boot/bin/*; \
               epoch="$(date --date "$BUILD_CREATED" +%s)"; \
