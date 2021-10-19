@@ -94,7 +94,8 @@ ENV           DBDB_SERVER_NAME=""
 # 3005/tcp 8324/tcp 32469/tcp 1900/udp 32410/udp 32412/udp 32413/udp 32414/udp
 # Volumes we need
 
-ENV           NICK="plex"
+ENV           _SERVICE_NICK="plex"
+ENV           _SERVICE_TYPE="http"
 
 COPY          --from=assembly --chown=$BUILD_UID:root /dist /
 
@@ -107,10 +108,10 @@ EXPOSE        80
 # Log verbosity for
 ENV           LOG_LEVEL="warn"
 # Domain name to serve
-ENV           DOMAIN="$NICK.local"
+ENV           DOMAIN="$_SERVICE_NICK.local"
 ENV           ADDITIONAL_DOMAINS="https://*.debian.org"
 # Whether the server should behave as a proxy (disallows mTLS)
-ENV           SERVER_NAME="DuboDubonDuponey/1.0 (Caddy/2) [$NICK]"
+ENV           SERVER_NAME="DuboDubonDuponey/1.0 (Caddy/2) [$_SERVICE_NICK]"
 # Control wether tls is going to be "internal" (eg: self-signed), or alternatively an email address to enable letsencrypt - use "" to disable TLS entirely
 ENV           TLS="internal"
 # 1.2 or 1.3
@@ -130,11 +131,11 @@ ENV           AUTH_USERNAME="dubo-dubon-duponey"
 ENV           AUTH_PASSWORD="cmVwbGFjZV9tZV93aXRoX3NvbWV0aGluZwo="
 ### mDNS broadcasting
 # Type to advertise
-ENV           MDNS_TYPE="_http._tcp"
+ENV           MDNS_TYPE="_$_SERVICE_TYPE._tcp"
 # Name is used as a short description for the service
-ENV           MDNS_NAME="$NICK mDNS display name"
+ENV           MDNS_NAME="$_SERVICE_NICK mDNS display name"
 # The service will be annonced and reachable at $MDNS_HOST.local (set to empty string to disable mDNS announces entirely)
-ENV           MDNS_HOST="$NICK"
+ENV           MDNS_HOST="$_SERVICE_NICK"
 # Also announce the service as a workstation (for example for the benefit of coreDNS mDNS)
 ENV           MDNS_STATION=true
 # Caddy certs will be stored here
