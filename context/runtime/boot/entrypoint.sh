@@ -16,7 +16,7 @@ helpers::dir::writable "$XDG_STATE_HOME" create
 helpers::dir::writable "$XDG_CACHE_HOME" create
 
 # mDNS blast if asked to
-[ ! "${MDNS_HOST:-}" ] || {
+[ "${MDNS_ENABLED:-}" != true ] || {
   _mdns_port="$([ "$TLS" != "" ] && printf "%s" "${ADVANCED_PORT_HTTPS:-443}" || printf "%s" "${ADVANCED_PORT_HTTP:-80}")"
   [ ! "${MDNS_STATION:-}" ] || mdns::records::add "_workstation._tcp" "$MDNS_HOST" "${MDNS_NAME:-}" "$_mdns_port"
   mdns::records::add "${MDNS_TYPE:-_http._tcp}" "$MDNS_HOST" "${MDNS_NAME:-}" "$_mdns_port"
@@ -24,7 +24,7 @@ helpers::dir::writable "$XDG_CACHE_HOME" create
 }
 
 # Start the sidecar
-start::sidecar &
+[ "${PROXY_HTTPS_ENABLED:-}" != true ] || start::sidecar &
 
 # XXX cleanup plex/plexmediaserver.pid if there on start
 
@@ -40,11 +40,11 @@ DBDB_ADVERTISE_DOMAIN=${DBDB_ADVERTISE_DOMAIN:-}
 DBDB_ADVERTISE_PORT=${DBDB_ADVERTISE_PORT:-}
 
 # Server conf
-export PLEX_MEDIA_SERVER_APPLICATION_SUPPORT_DIR="/data/Library/Application Support"
+export PLEX_MEDIA_SERVER_APPLICATION_SUPPORT_DIR="$XDG_DATA_HOME/Library/Application Support"
 export PLEX_MEDIA_SERVER_HOME=/usr/lib/plexmediaserver
 export PLEX_MEDIA_SERVER_MAX_PLUGIN_PROCS=6
 export PLEX_MEDIA_SERVER_MAX_STACK_SIZE=3000
-export PLEX_MEDIA_SERVER_TMPDIR=/tmp
+export PLEX_MEDIA_SERVER_TMPDIR="$XDG_RUNTIME_DIR"
 export PLEX_MEDIA_SERVER_USE_SYSLOG=false
 
 # Info
@@ -121,7 +121,7 @@ plex::start(){
 }
 
 # If the first run completed successfully, start and go
-if [ -e /data/.firstRun ]; then
+if [ -e "$XDG_DATA_HOME"/.firstRun ]; then
   plex::start "$@"
   exit
 fi
@@ -198,10 +198,10 @@ plex::preferences::write "OldestPreviousVersion"    "legacy"
 [ ! "$DBDB_ADVERTISE_IP" ] || plex::preferences::write "customConnections" "$DBDB_ADVERTISE_IP"
 plex::preferences::write "GdmEnabled"               0
 plex::preferences::write "sendCrashReports"         0
-plex::preferences::write "TranscoderTempDirectory" "/tmp/transcode"
+plex::preferences::write "TranscoderTempDirectory" "$XDG_CACHE_HOME/transcode"
 
 
-touch /data/.firstRun
+touch "$XDG_DATA_HOME"/.firstRun
 printf >&2 "Plex Media Server first run setup complete\n"
 
 tail -F "$PLEX_MEDIA_SERVER_APPLICATION_SUPPORT_DIR/Plex Media Server/Logs/Plex Transcoder Statistics.log" &
