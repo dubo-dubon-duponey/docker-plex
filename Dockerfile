@@ -1,9 +1,9 @@
-ARG           FROM_REGISTRY=index.docker.io/dubodubonduponey
+ARG           FROM_REGISTRY=docker.io/dubodubonduponey
 
-ARG           FROM_IMAGE_BUILDER=base:builder-bullseye-2022-08-01
-ARG           FROM_IMAGE_AUDITOR=base:auditor-bullseye-2022-08-01
-ARG           FROM_IMAGE_TOOLS=tools:linux-bullseye-2022-08-01
-ARG           FROM_IMAGE_RUNTIME=base:runtime-bullseye-2022-08-01
+ARG           FROM_IMAGE_BUILDER=base:builder-bullseye-2022-12-01
+ARG           FROM_IMAGE_AUDITOR=base:auditor-bullseye-2022-12-01
+ARG           FROM_IMAGE_TOOLS=tools:linux-bullseye-2022-12-01
+ARG           FROM_IMAGE_RUNTIME=base:runtime-bullseye-2022-12-01
 
 FROM          $FROM_REGISTRY/$FROM_IMAGE_TOOLS                                                                          AS builder-tools
 
@@ -24,9 +24,13 @@ RUN           setcap 'cap_net_bind_service+ep'                /dist/boot/bin/cad
 
 RUN           RUNNING=true \
               STATIC=true \
-                dubo-check validate /dist/boot/bin/*
+                dubo-check validate /dist/boot/bin/http-health
+RUN           RUNNING=true \
+              STATIC=true \
+                dubo-check validate /dist/boot/bin/goello-server-ng
 
-RUN           RO_RELOCATIONS=true \
+RUN           RUNNING=true \
+              RO_RELOCATIONS=true \
                 dubo-check validate /dist/boot/bin/caddy
 
 RUN           chmod 555 /dist/boot/bin/*; \
@@ -41,7 +45,7 @@ FROM          $FROM_REGISTRY/$FROM_IMAGE_RUNTIME
 ARG           TARGETPLATFORM
 
 # Env so that it's available at runtime
-ENV           PLEX_VERSION=1.25.9.5721-965587f64
+ENV           PLEX_VERSION=1.30.0.6486-629d58034
 
 WORKDIR       /boot/bin
 
@@ -61,10 +65,10 @@ RUN           --mount=type=secret,uid=100,id=CA \
               --mount=type=secret,id=APT_CONFIG \
               apt-get update -qq && \
               apt-get install -qq --no-install-recommends \
-                curl=7.74.0-1.3+deb11u1 \
+                curl=7.74.0-1.3+deb11u3 \
                 xmlstarlet=1.6.1-2.1 \
                 uuid-runtime=2.36.1-8+deb11u1 \
-                dnsutils=1:9.16.27-1~deb11u1 \
+                dnsutils=1:9.16.33-1~deb11u1 \
               && apt-get -qq autoremove       \
               && apt-get -qq clean            \
               && rm -rf /var/lib/apt/lists/*  \

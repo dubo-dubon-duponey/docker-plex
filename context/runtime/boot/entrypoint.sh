@@ -58,26 +58,26 @@ PLEX_MEDIA_SERVER_INFO_PLATFORM_VERSION="$(uname -r)"
 # XML attribute manipulation
 dc::xml::get(){
   local key="$1"
-  local root="${2:-/}"
+  local rootx="${2:-/}"
   local file="${3:-/dev/stdin}"
 
-  xmlstarlet sel -T -t -m "$root" -v "@${key}" -n "$file"
+  xmlstarlet sel -T -t -m "$rootx" -v "@${key}" -n "$file"
 }
 
 dc::xml::set(){
   local key="$1"
   local value="$2"
-  local root="${3:-/}"
+  local rootx="${3:-/}"
   local file="${4:-/dev/stdin}"
 
   local count
 
-  count="$(xmlstarlet sel -t -v "count($root/@${key})" "$file")"
+  count="$(xmlstarlet sel -t -v "count($rootx/@${key})" "$file")"
   count=$((count + 0))
   if [ "$count" -gt 0 ]; then
-    xmlstarlet ed --inplace --update "$root/@$key" -v "$value" "$file"
+    xmlstarlet ed --inplace --update "$rootx/@$key" -v "$value" "$file"
   else
-    xmlstarlet ed --inplace --insert "$root"  --type attr -n "$key" -v "$value" "$file"
+    xmlstarlet ed --inplace --insert "$rootx"  --type attr -n "$key" -v "$value" "$file"
   fi
 }
 
