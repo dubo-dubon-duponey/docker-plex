@@ -1,9 +1,9 @@
 ARG           FROM_REGISTRY=docker.io/dubodubonduponey
 
-ARG           FROM_IMAGE_BUILDER=base:builder-bullseye-2022-12-01
-ARG           FROM_IMAGE_AUDITOR=base:auditor-bullseye-2022-12-01
-ARG           FROM_IMAGE_TOOLS=tools:linux-bullseye-2022-12-01
-ARG           FROM_IMAGE_RUNTIME=base:runtime-bullseye-2022-12-01
+ARG           FROM_IMAGE_BUILDER=base:builder-bookworm-2023-09-01
+ARG           FROM_IMAGE_AUDITOR=base:auditor-bookworm-2023-09-01
+ARG           FROM_IMAGE_TOOLS=tools:linux-bookworm-2023-09-01
+ARG           FROM_IMAGE_RUNTIME=base:runtime-bookworm-2023-09-01
 
 FROM          $FROM_REGISTRY/$FROM_IMAGE_TOOLS                                                                          AS builder-tools
 
@@ -65,10 +65,10 @@ RUN           --mount=type=secret,uid=100,id=CA \
               --mount=type=secret,id=APT_CONFIG \
               apt-get update -qq && \
               apt-get install -qq --no-install-recommends \
-                curl=7.74.0-1.3+deb11u3 \
-                xmlstarlet=1.6.1-2.1 \
-                uuid-runtime=2.36.1-8+deb11u1 \
-                dnsutils=1:9.16.33-1~deb11u1 \
+                curl=7.88.1-10+deb12u1 \
+                xmlstarlet=1.6.1-3 \
+                uuid-runtime=2.38.1-5+b1 \
+                dnsutils=1:9.18.16-1~deb12u1 \
               && apt-get -qq autoremove       \
               && apt-get -qq clean            \
               && rm -rf /var/lib/apt/lists/*  \
