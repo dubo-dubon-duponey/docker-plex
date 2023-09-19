@@ -1,9 +1,9 @@
 ARG           FROM_REGISTRY=docker.io/dubodubonduponey
 
-ARG           FROM_IMAGE_BUILDER=base:builder-bookworm-2023-09-01
-ARG           FROM_IMAGE_AUDITOR=base:auditor-bookworm-2023-09-01
-ARG           FROM_IMAGE_TOOLS=tools:linux-bookworm-2023-09-01
-ARG           FROM_IMAGE_RUNTIME=base:runtime-bookworm-2023-09-01
+ARG           FROM_IMAGE_BUILDER=base:builder-bookworm-2023-09-05
+ARG           FROM_IMAGE_AUDITOR=base:auditor-bookworm-2023-09-05
+ARG           FROM_IMAGE_TOOLS=tools:linux-bookworm-2023-09-05
+ARG           FROM_IMAGE_RUNTIME=base:runtime-bookworm-2023-09-05
 
 FROM          $FROM_REGISTRY/$FROM_IMAGE_TOOLS                                                                          AS builder-tools
 
@@ -110,9 +110,9 @@ EXPOSE        80
 # By default, tls should be restricted to 1.3 - you may downgrade to 1.2+ for compatibility with older clients (webdav client on macos, older browsers)
 ENV           ADVANCED_TLS_MIN=1.3
 # Name advertised by Caddy in the server http header
-ENV           ADVANCED_SERVER_NAME="DuboDubonDuponey/1.0 (Caddy/2) [$_SERVICE_NICK]"
+ENV           ADVANCED_SERVER_NAME="DuboDubonDuponey/1.0 (Caddy/2)"
 # Root certificate to trust for mTLS - this is not used if MTLS is disabled
-ENV           ADVANCED_MTLS_TRUST="/certs/mtls_ca.crt"
+ENV           ADVANCED_MTLS_TRUST="/certs/pki/authorities/local/root.crt"
 # Log verbosity for
 ENV           LOG_LEVEL="warn"
 # Whether to start caddy at all or not
@@ -134,7 +134,7 @@ ENV           TLS_AUTO=disable_redirects
 # https://pki.local
 ENV           TLS_SERVER="https://acme-v02.api.letsencrypt.org/directory"
 # Either require_and_verify or verify_if_given, or "" to disable mTLS altogether
-ENV           MTLS="require_and_verify"
+ENV           MTLS_MODE="require_and_verify"
 # Realm for authentication - set to "" to disable authentication entirely
 ENV           AUTH="My Precious Realm"
 # Provide username and password here (call the container with the "hash" command to generate a properly encrypted password, otherwise, a random one will be generated)

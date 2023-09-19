@@ -16,15 +16,15 @@ helpers::dir::writable "$XDG_STATE_HOME" create
 helpers::dir::writable "$XDG_CACHE_HOME" create
 
 # mDNS blast if asked to
-[ "${MDNS_ENABLED:-}" != true ] || {
+[ "${MOD_MDNS_ENABLED:-}" != true ] || {
   _mdns_port="$([ "$TLS" != "" ] && printf "%s" "${ADVANCED_PORT_HTTPS:-443}" || printf "%s" "${ADVANCED_PORT_HTTP:-80}")"
   [ ! "${MDNS_STATION:-}" ] || mdns::records::add "_workstation._tcp" "$MDNS_HOST" "${MDNS_NAME:-}" "$_mdns_port"
   mdns::records::add "${MDNS_TYPE:-_http._tcp}" "$MDNS_HOST" "${MDNS_NAME:-}" "$_mdns_port"
-  mdns::records::broadcast &
+  mdns::start::broadcaster &
 }
 
 # Start the sidecar
-[ "${PROXY_HTTPS_ENABLED:-}" != true ] || start::sidecar &
+[ "${PROXY_HTTPS_ENABLED:-}" != true ] || http::start &
 
 # XXX cleanup plex/plexmediaserver.pid if there on start
 
