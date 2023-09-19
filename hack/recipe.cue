@@ -19,7 +19,7 @@ cakes: {
 				platforms: [
 					types.#Platforms.#AMD64,
 					types.#Platforms.#ARM64,
-					types.#Platforms.#V7,
+					// types.#Platforms.#V7,
 					// tired of building that useless shite
 					// types.#Platforms.#I386,
 				]
