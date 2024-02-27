@@ -1,9 +1,9 @@
 ARG           FROM_REGISTRY=docker.io/dubodubonduponey
 
-ARG           FROM_IMAGE_BUILDER=base:builder-bookworm-2023-09-05
-ARG           FROM_IMAGE_AUDITOR=base:auditor-bookworm-2023-09-05
-ARG           FROM_IMAGE_TOOLS=tools:linux-bookworm-2023-09-05
-ARG           FROM_IMAGE_RUNTIME=base:runtime-bookworm-2023-09-05
+ARG           FROM_IMAGE_BUILDER=base:builder-bookworm-2024-02-20
+ARG           FROM_IMAGE_AUDITOR=base:auditor-bookworm-2024-02-20
+ARG           FROM_IMAGE_TOOLS=tools:linux-bookworm-2024-02-20
+ARG           FROM_IMAGE_RUNTIME=base:runtime-bookworm-2024-02-20
 
 FROM          $FROM_REGISTRY/$FROM_IMAGE_TOOLS                                                                          AS builder-tools
 
@@ -65,10 +65,10 @@ RUN           --mount=type=secret,uid=100,id=CA \
               --mount=type=secret,id=APT_CONFIG \
               apt-get update -qq && \
               apt-get install -qq --no-install-recommends \
-                curl=7.88.1-10+deb12u1 \
+                curl=7.88.1-10+deb12u5 \
                 xmlstarlet=1.6.1-3 \
                 uuid-runtime=2.38.1-5+b1 \
-                dnsutils=1:9.18.16-1~deb12u1 \
+                dnsutils=1:9.18.24-1 \
               && apt-get -qq autoremove       \
               && apt-get -qq clean            \
               && rm -rf /var/lib/apt/lists/*  \
