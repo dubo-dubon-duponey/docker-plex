@@ -10,12 +10,12 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       - name: Checks-out repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           submodules: true
 
       - name: Enable cache
-        uses: actions/cache@v2.1.1
+        uses: actions/cache@v4
         with:
           path: $GITHUB_WORKSPACE/cache
           key: cache
@@ -28,6 +28,8 @@ jobs:
           sudo chown -R 2000:root "$GITHUB_WORKSPACE/cache/apt"
           sudo chown -R 2000:root "$GITHUB_WORKSPACE/cache/certs"
           sudo chown -R $(id -u) "$GITHUB_WORKSPACE/cache/bin"
+          sudo chmod g+w "$GITHUB_WORKSPACE/cache"
+          sudo chown $(id -u) "$GITHUB_WORKSPACE/cache"
 
       - name: Start apt proxy
         run: |
@@ -50,7 +52,7 @@ jobs:
       - name: test
         run: |
           # Set the path and install the tools
-          export PATH="$GITHUB_WORKSPACE/cache/bin:$PATH"
+          export PATH="$HOME/bin:$PATH"
           ./hack/helpers/install-tools.sh
           # Start buildkit
           bkaddr="$(./hack/helpers/start-buildkit.sh 2>/dev/null)"

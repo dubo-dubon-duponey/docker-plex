@@ -4,9 +4,9 @@ set -o errexit -o errtrace -o functrace -o nounset -o pipefail
 root="$(cd "$(dirname "${BASH_SOURCE[0]:-$PWD}")" 2>/dev/null 1>&2 && pwd)"
 readonly root
 # shellcheck source=/dev/null
-source "$root/helpers.sh"
+. "$root/helpers.sh"
 # shellcheck source=/dev/null
-source "$root/mdns.sh"
+. "$root/mdns.sh"
 
 helpers::dir::writable "/certs"
 helpers::dir::writable "$XDG_DATA_HOME" create
@@ -18,9 +18,9 @@ helpers::dir::writable "$XDG_CACHE_HOME" create
 # mDNS blast if asked to
 [ "${MOD_MDNS_ENABLED:-}" != true ] || {
   _mdns_port="$([ "$TLS" != "" ] && printf "%s" "${ADVANCED_PORT_HTTPS:-443}" || printf "%s" "${ADVANCED_PORT_HTTP:-80}")"
-  [ ! "${MDNS_STATION:-}" ] || mdns::records::add "_workstation._tcp" "$MDNS_HOST" "${MDNS_NAME:-}" "$_mdns_port"
-  mdns::records::add "${MDNS_TYPE:-_http._tcp}" "$MDNS_HOST" "${MDNS_NAME:-}" "$_mdns_port"
-  mdns::start::broadcaster &
+  [ ! "${MOD_MDNS_STATION:-}" ] || mdns::records::add "_workstation._tcp" "$MOD_MDNS_HOST" "${MOD_MDNS_NAME:-}" "$_mdns_port"
+  mdns::records::add "${MOD_MDNS_TYPE:-_http._tcp}" "$MOD_MDNS_HOST" "${MOD_MDNS_NAME:-}" "$_mdns_port"
+  mdns::start::broadcaster
 }
 
 # Start the sidecar

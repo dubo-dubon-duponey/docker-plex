@@ -1,9 +1,9 @@
 ARG           FROM_REGISTRY=docker.io/dubodubonduponey
 
-ARG           FROM_IMAGE_BUILDER=base:builder-bookworm-2024-02-20
-ARG           FROM_IMAGE_AUDITOR=base:auditor-bookworm-2024-02-20
-ARG           FROM_IMAGE_TOOLS=tools:linux-bookworm-2024-02-20
-ARG           FROM_IMAGE_RUNTIME=base:runtime-bookworm-2024-02-20
+ARG           FROM_IMAGE_BUILDER=base:builder-bookworm-2024-03-01
+ARG           FROM_IMAGE_AUDITOR=base:auditor-bookworm-2024-03-01
+ARG           FROM_IMAGE_TOOLS=tools:linux-bookworm-2024-03-01
+ARG           FROM_IMAGE_RUNTIME=base:runtime-bookworm-2024-03-01
 
 FROM          $FROM_REGISTRY/$FROM_IMAGE_TOOLS                                                                          AS builder-tools
 
@@ -142,15 +142,15 @@ ENV           AUTH_USERNAME="dubo-dubon-duponey"
 ENV           AUTH_PASSWORD="cmVwbGFjZV9tZV93aXRoX3NvbWV0aGluZwo="
 ### mDNS broadcasting
 # Whether to enable MDNS broadcasting or not
-ENV           MDNS_ENABLED=true
+ENV           MOD_MDNS_ENABLED=true
 # Type to advertise
-ENV           MDNS_TYPE="_$_SERVICE_TYPE._tcp"
+ENV           MOD_MDNS_TYPE="_$_SERVICE_TYPE._tcp"
 # Name is used as a short description for the service
-ENV           MDNS_NAME="$_SERVICE_NICK mDNS display name"
-# The service will be annonced and reachable at $MDNS_HOST.local (set to empty string to disable mDNS announces entirely)
-ENV           MDNS_HOST="$_SERVICE_NICK"
+ENV           MOD_MDNS_NAME="$_SERVICE_NICK mDNS display name"
+# The service will be annonced and reachable at $MOD_MDNS_HOST.local (set to empty string to disable mDNS announces entirely)
+ENV           MOD_MDNS_HOST="$_SERVICE_NICK"
 # Also announce the service as a workstation (for example for the benefit of coreDNS mDNS)
-ENV           MDNS_STATION=true
+ENV           ADVANCED_MOD_MDNS_STATION=true
 # Caddy certs will be stored here
 VOLUME        /certs
 # Caddy uses this
