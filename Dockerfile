@@ -1,9 +1,9 @@
 ARG           FROM_REGISTRY=docker.io/dubodubonduponey
 
-ARG           FROM_IMAGE_BUILDER=base:builder-bookworm-2024-03-01
-ARG           FROM_IMAGE_AUDITOR=base:auditor-bookworm-2024-03-01
-ARG           FROM_IMAGE_TOOLS=tools:linux-bookworm-2024-03-01
-ARG           FROM_IMAGE_RUNTIME=base:runtime-bookworm-2024-03-01
+ARG           FROM_IMAGE_BUILDER=base:builder-bookworm-2025-05-01
+ARG           FROM_IMAGE_AUDITOR=base:auditor-bookworm-2025-05-01
+ARG           FROM_IMAGE_TOOLS=tools:linux-bookworm-2025-05-01
+ARG           FROM_IMAGE_RUNTIME=base:runtime-bookworm-2025-05-01
 
 FROM          $FROM_REGISTRY/$FROM_IMAGE_TOOLS                                                                          AS builder-tools
 
@@ -45,7 +45,7 @@ FROM          $FROM_REGISTRY/$FROM_IMAGE_RUNTIME
 ARG           TARGETPLATFORM
 
 # Env so that it's available at runtime
-ENV           PLEX_VERSION=1.40.1.8227-c0dd5a73e
+ENV           PLEX_VERSION=1.41.7.9799-5bce000f7
 
 WORKDIR       /boot/bin
 
@@ -65,10 +65,10 @@ RUN           --mount=type=secret,uid=100,id=CA \
               --mount=type=secret,id=APT_CONFIG \
               apt-get update -qq && \
               apt-get install -qq --no-install-recommends \
-                curl=7.88.1-10+deb12u5 \
+                curl=7.88.1-10+deb12u12 \
                 xmlstarlet=1.6.1-3 \
-                uuid-runtime=2.38.1-5+b1 \
-                dnsutils=1:9.18.24-1 \
+                uuid-runtime=2.38.1-5+deb12u3 \
+                dnsutils=1:9.18.33-1~deb12u2 \
               && apt-get -qq autoremove       \
               && apt-get -qq clean            \
               && rm -rf /var/lib/apt/lists/*  \
@@ -76,9 +76,6 @@ RUN           --mount=type=secret,uid=100,id=CA \
               && rm -rf /var/tmp/*
 
 USER          dubo-dubon-duponey
-
-# Change home directory for plex
-# RUN         usermod -d /config plex
 
 # Environment
 ENV           DBDB_LOGIN=""
@@ -182,12 +179,7 @@ ENV           ADVANCED_MOD_HTTP_ADDITIONAL_DOMAINS=""
 EXPOSE        443
 EXPOSE        80
 
-# Caddy certs will be stored here
-VOLUME        /certs
-# Caddy uses this
-VOLUME        /tmp
-# Used by the backend service
-VOLUME        /data
+VOLUME        "$XDG_DATA_HOME"
 
 ENV           HEALTHCHECK_URL="http://127.0.0.1:10000/?healthcheck"
 

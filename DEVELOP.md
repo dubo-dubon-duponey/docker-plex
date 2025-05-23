@@ -10,11 +10,11 @@
 
 ### The what
 
-This image is built using: `docker.io/dubodubonduponey/base:builder-bookworm-2024-03-01` 
+This image is built using: `docker.io/dubodubonduponey/base:builder-bookworm-2025-05-01`
 
-The runtime part is based on: `docker.io/dubodubonduponey/base:runtime-bookworm-2024-03-01`
+The runtime part is based on: `docker.io/dubodubonduponey/base:runtime-bookworm-2025-05-01`
 
-Both these images are built upon: `docker.io/dubodubonduponey/debian:bookworm-2024-03-01`
+Both these images are built upon: `docker.io/dubodubonduponey/debian:bookworm-2025-05-01`
 
 You can find out more here:
 
@@ -72,14 +72,22 @@ Be sure to run `./hack/lint.sh` and `./hack/test.sh` before submitting anything.
     * no write
     * no cap
  * use the provided infrastructure
-    * runnable artifacts go to:
-        * `/boot/bin` (read-only)
-    * configuration should be read from:
-        * `/config` (read-only)
-    * certificates should go to:
-        * `/certs` (either read-only or read-write)
-    * persistent application data should use:
-        * `/data` (usually read-write)
-    * volatile data should use:
-        * `/tmp` (usually read-write)
+   * runnable artifacts go to:
+     * `/boot/bin` (read-only)
+   * configuration should be read from:
+     * `/magnetar/system/config` (read-only)
+   * and:
+     * `/magnetar/user/config` (read-write, user controlled)
+   * certificates should go to:
+     * `/magnetar/user/data` (either read-only or read-write)
+   * or:
+     * `/magnetar/system/data` (read-only)
+   * persistent application data should use:
+     * `/magnerar/system/data` (usually read-only)
+   * runtime data (socket, pipes) should use:
+     * `/magnerar/runtime`
+   * temp data (logs, states, etc) should use:
+     * `/magnerar/state`
+   * cache should use:
+     * `/magnerar/cache`
  * only use chroot to downgrade if you really REALLY need to start your entrypoint with "root"
